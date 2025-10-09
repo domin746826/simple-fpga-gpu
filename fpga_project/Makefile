@@ -18,7 +18,8 @@ constrainsFile = "azpr_evboard.ucf"
 VERILOG_SOURCES = \
 	main.v \
 	uart_rx.v \
-	vga_gen.v
+	vga_gen.v \
+	vram_24k.v
 
 ISE_PROJECT_FILE = ise/main.prj
 

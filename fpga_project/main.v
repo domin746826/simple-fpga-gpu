@@ -84,7 +84,20 @@ wire [7:0] v_small; // 0-180
 
 // reg [1:0] mode; // 0 - disabled, 1 - graphic 1440x900, 2 - text 1440x900
 
-(* ram_style="block" *) reg [5:0] vram [0:29999]; // 30kB VRAM
+
+
+vram_24k vram (
+    .render_data(),
+    .render_addr(),
+    .render_clk(clk106m),
+
+    .user_data_in(),
+    .user_data_out(),
+    .user_we(),
+    .user_addr(),
+    .user_clk(clk106m)
+);
+
 
 wire can_color;
 vga_gen vga_timing (
@@ -117,6 +130,8 @@ reg [5:0] pixel_out = 6'b0;
 
 // end
 //
+//
+
 always @(posedge clk106m) begin
     if (h_small < 200 && can_color && v_small < 150) begin
         // vram_index_render <= vram_index_render + 1;
