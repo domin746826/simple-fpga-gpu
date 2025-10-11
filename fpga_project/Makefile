@@ -61,7 +61,7 @@ erase:
 
 
 clean:
-	rm -rf ise/*.ngc ise/*.ngd ise/*.ncd ise/*.pcf ise/*.bgn ise/*.mrp ise/*.map ise/*.xrpt ise/*.twr ise/*.pad ise/*.lso ise/*.syr ise/*.twx ise/*.log ise/*.html ise/*.xml ise/_ngo ise/_xmsgs ise/*.xrpt ise/*.bit ise/*.ngm ise/*.ngr ise/*.ptwx ise/*.summary.xml ise/*.par ise/*.drc
+	rm -rf ise/*.ngc ise/*.ngd ise/*.ncd ise/*.pcf ise/*.bgn ise/*.mrp ise/*.bld ise/*.unroutes ise/*.map ise/*.xrpt ise/*.twr ise/*.pad ise/*.lso ise/*.syr ise/*.twx ise/*.log ise/*.html ise/*.xml ise/_ngo ise/_xmsgs ise/*.xrpt ise/*.bit ise/*.ngm ise/*.ngr ise/*.ptwx ise/*.summary.xml ise/*.par ise/*.drc
 	rm -f main.bit
 	rm -rf ise/xst/work
 

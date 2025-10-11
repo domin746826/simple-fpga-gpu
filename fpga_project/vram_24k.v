@@ -10,7 +10,11 @@ module vram_24k (
     input wire user_clk
 );
 
-(* ram_style="block" *) reg [7:0] mem [0:24575];
+(* ram_style="block" *) reg [7:0] mem [24575:0];
+
+initial begin
+    $readmemh("../vram_init.hex", mem);
+end
 
 always @(posedge render_clk) begin
     render_data <= mem[render_addr];

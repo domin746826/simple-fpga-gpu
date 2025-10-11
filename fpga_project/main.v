@@ -40,12 +40,12 @@ module main (
     input clk10m,
     output wire vsync_pin,
     output wire hsync_pin,
-    output wire r0_pin,
-    output wire r1_pin,
-    output wire g0_pin,
-    output wire g1_pin,
-    output wire b0_pin,
-    output wire b1_pin,
+    output reg r0_pin,
+    output reg r1_pin,
+    output reg g0_pin,
+    output reg g1_pin,
+    output reg b0_pin,
+    output reg b1_pin,
 
     input uart_rx,
     output reg led1,
@@ -79,22 +79,22 @@ BUFG bufg_clk106 (.I(clk106_int), .O(clk106m));
 wire [10:0] h_counter; // 0-1055
 wire [9:0] v_counter; // 0-627
 
-wire [8:0] h_small; // 0-288
-wire [7:0] v_small; // 0-180
+reg [14:0] vram_index = 22499;
+wire [7:0] rx_byte;
+reg rx_we = 0;
 
-// reg [1:0] mode; // 0 - disabled, 1 - graphic 1440x900, 2 - text 1440x900
-
-
+wire [7:0] vram_render_read;
+reg [14:0] current_vram_read_addr = 0;
 
 vram_24k vram (
-    .render_data(),
-    .render_addr(),
+    .render_data(vram_render_read),
+    .render_addr(current_vram_read_addr),
     .render_clk(clk106m),
 
-    .user_data_in(),
+    .user_data_in(rx_byte),
     .user_data_out(),
-    .user_we(),
-    .user_addr(),
+    .user_we(rx_we),
+    .user_addr(vram_index),
     .user_clk(clk106m)
 );
 
@@ -107,60 +107,96 @@ vga_gen vga_timing (
     .hsync(hsync_pin),
     .can_color(can_color),
     .h_counter(h_counter),
-    .v_counter(v_counter),
-    .h_small(h_small),
-    .v_small(v_small)
+    .v_counter(v_counter)
 );
 
 assign led2 = 1;
 
-reg [16:0] vram_index_render = 17'b0;
-reg [5:0] pixel_out = 6'b0;
-
-// always @(posedge clk106m) begin
-//     if (h_counter < 200 && can_color && v_counter < 150) begin
-//         vram_index_render <= vram_index_render + 1;
-//         pixel_out <= vram[vram_index_render];
-//     end else if(v_counter > 149) begin
-//         vram_index_render <= 0;
-//         pixel_out <= 6'b0;
-//     end else begin
-//         pixel_out <= 6'b0;
-//     end
-
-// end
-//
-//
+reg [5:0] pixel_out;// = 6'b0;
+reg [7:0] old_vram_byte = 8'b0;
+reg [1:0] small_vram_index = 0;
+reg [2:0] h_small = 5;
+reg [2:0] v_small = 0;
 
 always @(posedge clk106m) begin
-    if (h_small < 200 && can_color && v_small < 150) begin
-        // vram_index_render <= vram_index_render + 1;
-        pixel_out <= vram[v_small*200+h_small];
-    end else if(v_small > 149) begin
-        vram_index_render <= 0;
-        pixel_out <= 6'b0;
+    if (can_color) begin
+        if(h_small == 5) begin
+            h_small <= 0;
+            case (small_vram_index)
+                0: begin
+                    current_vram_read_addr <= current_vram_read_addr + 1;
+                    old_vram_byte <= vram_render_read;
+                end
+                1: begin
+                    current_vram_read_addr <= current_vram_read_addr + 1;
+                    old_vram_byte <= vram_render_read;
+                end
+                2: begin
+                    current_vram_read_addr <= current_vram_read_addr + 1;
+                    old_vram_byte <= vram_render_read;
+                end
+                3: begin
+                end
+            endcase
+            small_vram_index <= small_vram_index + 1;
+            r0_pin <= pixel_out[4];
+            r1_pin <= pixel_out[5];
+            g0_pin <= pixel_out[2];
+            g1_pin <= pixel_out[3];
+            b0_pin <= pixel_out[0];
+            b1_pin <= pixel_out[1];
+        end else begin
+            h_small <= h_small + 1;
+        end
     end else begin
-        pixel_out <= 6'b0;
+        r0_pin <= 0;
+        r1_pin <= 0;
+        g0_pin <= 0;
+        g1_pin <= 0;
+        b0_pin <= 0;
+        b1_pin <= 0;
     end
 
+    if(h_counter == 1900) begin
+        h_small <= 5;
+        small_vram_index <= 0;
+
+        if(v_counter == 931) begin
+            current_vram_read_addr <= 0;
+            v_small <= 0;
+        end else begin
+            if(v_small == 5) begin
+                v_small <= 0;
+            end else begin
+                v_small <= v_small + 1;
+                current_vram_read_addr <= current_vram_read_addr - 150;
+            end
+        end
+    end
+end
+
+// unpack 4 pixels from 3 bytes
+always @(*) begin
+case (small_vram_index)
+    0: begin
+        pixel_out = {vram_render_read[7:2]};
+    end
+    1: begin
+        pixel_out = {old_vram_byte[1:0], vram_render_read[7:4]};
+    end
+    2: begin
+        pixel_out = {old_vram_byte[3:0], vram_render_read[7:6]};
+    end
+    3: begin
+        pixel_out = {old_vram_byte[5:0]};
+    end
+endcase
 end
 
 
 
-// assign {r1_pin,r0_pin,g1_pin,g0_pin,b1_pin,b0_pin} = pixel_out;
-
-assign r0_pin = can_color & pixel_out[4];
-assign r1_pin = can_color & pixel_out[5];
-assign g0_pin = can_color & pixel_out[2];
-assign g1_pin = can_color & pixel_out[3];
-assign b0_pin = can_color & pixel_out[0];
-assign b1_pin = can_color & pixel_out[1];
-
-
-reg [14:0] vram_index = 29999;
 wire rx_data_valid;
 reg dataack_read = 1'b0;
-wire [7:0] rx_byte;
 
 uart_rx uart_rx_inst (
     .clk(clk106m),
@@ -172,20 +208,23 @@ uart_rx uart_rx_inst (
     .error()
 );
 
+reg rx_data_valid_prev = 0;
 
 always @(posedge clk106m) begin
-    if (rx_data_valid == 1) begin
-        vram[vram_index] <= rx_byte[5:0];
+    rx_data_valid_prev <= rx_data_valid;
+    if (rx_data_valid && !rx_data_valid_prev) begin
         dataack_read <= 1;
-
-        if (vram_index == 29999)
+        rx_we <= 1;
+        if (vram_index == 22499)
             vram_index <= 0;
         else
             vram_index <= vram_index + 1;
+
         led1 <= ~led1;
+    end else begin
+        // dataack_read <= 0;
+        rx_we <= 0;
     end
 end
-
-
 
 endmodule
