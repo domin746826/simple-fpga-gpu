@@ -1,8 +1,0 @@
-INTSTYLE=ise
-INFILE=/home/domin/Dokumenty/projects/simple-fpga-gpu/fpga_project/ise/main.ncd
-OUTFILE=/home/domin/Dokumenty/projects/simple-fpga-gpu/fpga_project/ise/main.bit
-FAMILY=Spartan3E
-PART=xc3s250e-4vq100
-WORKINGDIR=/home/domin/Dokumenty/projects/simple-fpga-gpu/fpga_project/ise
-LICENSE=WebPack
-USER_INFO=213035334_0_0_233
