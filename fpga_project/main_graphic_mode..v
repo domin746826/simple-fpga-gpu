@@ -33,7 +33,7 @@ color: low nibble - foreground, high nibble - background
 0x4EC0-0x5EBF - font (4096 bytes)
 0x5EC0-0x5ECF - color palette (16 colors, 6 bit each, two oldest bits unused)
 0x5ED0-0x5F00 - registers and reserved (48 bytes)
-text 180x56
+
 */
 
 module main (
@@ -79,7 +79,7 @@ BUFG bufg_clk106 (.I(clk106_int), .O(clk106m));
 wire [10:0] h_counter; // 0-1055
 wire [9:0] v_counter; // 0-627
 
-reg [14:0] vram_index = 20159;
+reg [14:0] vram_index = 22499;
 wire [7:0] rx_byte;
 reg rx_we = 0;
 
@@ -112,66 +112,42 @@ vga_gen vga_timing (
 
 assign led2 = 1;
 
-reg [7:0] h_text_pos = 0; // current rendered char x pos
-reg [5:0] v_text_pos = 0; // current rendered char y pos
-
-
-reg [7:0] ascii_code = 0;  // current rendered char fetched ascii code
-reg [7:0] color_code = 0; // 0bffffbbbb current rendered char fetched color code
-
-reg [2:0] font_render_cycle = 0;// current rendered char h pixel (0-7)
-reg [3:0] font_v_line = 0; // current rendered char line (0-15)
-
 reg [5:0] pixel_out;// = 6'b0;
-reg [7:0] font_onerow_data = 0;
-reg [7:0] color_code_dbuf = 0;
+reg [7:0] old_vram_byte = 8'b0;
+reg [1:0] small_vram_index = 0;
+reg [2:0] h_small = 5;
+reg [2:0] v_small = 0;
 
 always @(posedge clk106m) begin
-    if((h_counter < 1440 || h_counter > 1895)&&v_counter < 896) begin
-        case (font_render_cycle)
-            0: begin
-                current_vram_read_addr <= h_text_pos + v_text_pos * 180;
-            end
-            1: begin end
-            2: begin
-                ascii_code <= vram_render_read;
-                current_vram_read_addr <= current_vram_read_addr + 10080;
-            end
-            3: begin end
-            4: begin
-                color_code_dbuf <= vram_render_read;
-                current_vram_read_addr <= 20160 + ascii_code * 16 + font_v_line;
-            end
-            5: begin end
-            6: begin end
-            7: begin
-                font_onerow_data <= vram_render_read;
-                color_code <= color_code_dbuf;
-                h_text_pos <= h_text_pos + 1;
-            end
-        endcase
-        font_render_cycle <= font_render_cycle + 1;
-    end else begin
-        font_render_cycle <= 0;
-        h_text_pos <= 0;
-        font_onerow_data <= 0;
-        color_code <= 0;
-        h_text_pos <= 0;
-    end
-    if (h_counter < 1440  && v_counter < 896) begin
-        if(font_onerow_data[~font_render_cycle]) begin
-            pixel_out <= {color_code[6], color_code[7], color_code[5], color_code[7], color_code[4], color_code[7]};
+    if (can_color) begin
+        if(h_small == 5) begin
+            h_small <= 0;
+            case (small_vram_index)
+                0: begin
+                    current_vram_read_addr <= current_vram_read_addr + 1;
+                    old_vram_byte <= vram_render_read;
+                end
+                1: begin
+                    current_vram_read_addr <= current_vram_read_addr + 1;
+                    old_vram_byte <= vram_render_read;
+                end
+                2: begin
+                    current_vram_read_addr <= current_vram_read_addr + 1;
+                    old_vram_byte <= vram_render_read;
+                end
+                3: begin
+                end
+            endcase
+            small_vram_index <= small_vram_index + 1;
+            r0_pin <= pixel_out[4];
+            r1_pin <= pixel_out[5];
+            g0_pin <= pixel_out[2];
+            g1_pin <= pixel_out[3];
+            b0_pin <= pixel_out[0];
+            b1_pin <= pixel_out[1];
         end else begin
-            pixel_out <= {color_code[2], color_code[3], color_code[1], color_code[3], color_code[0], color_code[3]};
+            h_small <= h_small + 1;
         end
-
-        r0_pin <= pixel_out[4];
-        r1_pin <= pixel_out[5];
-        g0_pin <= pixel_out[2];
-        g1_pin <= pixel_out[3];
-        b0_pin <= pixel_out[0];
-        b1_pin <= pixel_out[1];
-
     end else begin
         r0_pin <= 0;
         r1_pin <= 0;
@@ -179,23 +155,44 @@ always @(posedge clk106m) begin
         g1_pin <= 0;
         b0_pin <= 0;
         b1_pin <= 0;
-
-
     end
 
-    if(h_counter == 1860) begin
+    if(h_counter == 1900) begin
+        h_small <= 5;
+        small_vram_index <= 0;
 
         if(v_counter == 931) begin
-            font_v_line <= 0;
-            v_text_pos <= 0;
+            current_vram_read_addr <= 0;
+            v_small <= 0;
         end else begin
-            if(font_v_line == 15) begin
-                v_text_pos <= v_text_pos + 1;
+            if(v_small == 5) begin
+                v_small <= 0;
+            end else begin
+                v_small <= v_small + 1;
+                current_vram_read_addr <= current_vram_read_addr - 150;
             end
-            font_v_line <= font_v_line + 1;
         end
     end
 end
+
+// unpack 4 pixels from 3 bytes
+always @(*) begin
+case (small_vram_index)
+    0: begin
+        pixel_out = {vram_render_read[7:2]};
+    end
+    1: begin
+        pixel_out = {old_vram_byte[1:0], vram_render_read[7:4]};
+    end
+    2: begin
+        pixel_out = {old_vram_byte[3:0], vram_render_read[7:6]};
+    end
+    3: begin
+        pixel_out = {old_vram_byte[5:0]};
+    end
+endcase
+end
+
 
 
 wire rx_data_valid;
@@ -218,7 +215,7 @@ always @(posedge clk106m) begin
     if (rx_data_valid && !rx_data_valid_prev) begin
         dataack_read <= 1;
         rx_we <= 1;
-        if (vram_index == 20159)
+        if (vram_index == 22499)
             vram_index <= 0;
         else
             vram_index <= vram_index + 1;

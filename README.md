@@ -3,6 +3,7 @@
 A **very simple GPU** built on **Xilinx XC3S250E** (Spartan-3E).
 The goal of this project is to implement a minimal, standalone external **GPU** for FPGA platforms supporting text, graphics, and primitive drawing acceleration which could be used with Arduino and STM32 boards.
 
+![Demo_txt](./img/demo_txt.jpg)
 ![Demo](./img/demo.jpg)
 
 ---
@@ -14,6 +15,7 @@ It provides a framebuffer-based video output (VGA) and plans to support multiple
 
 Currently implemented:
 - **200×150 graphics mode** on 1440x900 timing
+- **180x56 text mode** on 1440x900 timing
 - **6-bit color (RRGGBB)**
 - Simple VGA output controller
 - Receiving framebuffer over UART
@@ -68,13 +70,13 @@ You can adjust pinout in fpga_project/azpr_evboard.ucf
 - [ ] SPI interface (communication with MCU or host)
 - [ ] UART interface with basic command protocol
 - [ ] Optional 8-bit parallel data interface
-- [ ] VRAM organization (framebuffer + font/tilemap memory)
+- [x] VRAM organization (framebuffer + font/tilemap memory)
 
 ---
 
 ### Stage 3 — Text Modes
 - [x] Font converter
-- [ ] 1440×900, 8×16 font, 4-bit color, fg&bg
+- [x] 1440×900, 8×16 font, 4-bit color, fg&bg
 - [ ] 1440×900, 16×32 font, 6-bit color, fg&bg
 - [ ] 1440×900, 12×24 font, 6-bit color, fg&bg
 
