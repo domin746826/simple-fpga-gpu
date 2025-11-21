@@ -13,6 +13,14 @@ The goal of this project is to implement a minimal, standalone external **GPU** 
 This project implements a simple graphics pipeline entirely in FPGA logic.
 It provides a framebuffer-based video output (VGA) and plans to support multiple display modes, text rendering, and hardware-accelerated drawing primitives.
 
+
+**!!! This is my personal hobby project**
+
+*All Verilog source files were written manually by me (I did not use any form of AI).*
+*I used GitHub Copilot only to generate Python scripts because I wanted to focus on writing Verilog code for the FPGA, not on the Python tooling.*
+*However, I plan to replace those Python scripts with fully human-written code in the future.*
+
+
 Currently implemented:
 - **200×150 graphics mode** on 1440x900 timing
 - **180x56 text mode** on 1440x900 timing
