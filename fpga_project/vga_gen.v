@@ -33,12 +33,12 @@ end
 // disp -> fp -> sync -> bp
 
 // move 120px to the right so graphic mode image is on the center, TODO remove it
-// assign hsync = ~(h_counter >= 1520 - 120 && h_counter < 1627-120);
-assign hsync = ~(h_counter >= 1520 && h_counter < 1627);
+assign hsync = ~(h_counter >= 1520 - 120 && h_counter < 1627-120);
+// assign hsync = ~(h_counter >= 1520 && h_counter < 1627);
 
 assign vsync = v_counter >= 901 && v_counter < 904;
-// assign can_color = h_counter < 1440 -240 && v_counter < 900;
-assign can_color = h_counter < 1440  && v_counter < 900;
+assign can_color = h_counter < 1440 -240 && v_counter < 900;
+// assign can_color = h_counter < 1440  && v_counter < 900;
 
 
 endmodule

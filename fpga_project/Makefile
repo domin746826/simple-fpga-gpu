@@ -16,7 +16,7 @@ constrainsFile = "azpr_evboard.ucf"
 
 
 VERILOG_SOURCES = \
-	main.v \
+	main_graphic_mode.v \
 	uart_rx.v \
 	vga_gen.v \
 	vram_24k.v

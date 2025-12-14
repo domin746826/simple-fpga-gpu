@@ -1,4 +1,4 @@
-verilog work "../main.v"
+verilog work "../main_graphic_mode.v"
 verilog work "../uart_rx.v"
 verilog work "../vga_gen.v"
 verilog work "../vram_24k.v"
