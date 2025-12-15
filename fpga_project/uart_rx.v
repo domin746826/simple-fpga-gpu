@@ -9,7 +9,9 @@ module uart_rx (
 );
 
 // Parametry czasowe
-parameter CLK_FREQ = 106_666_666;
+parameter CLK_FREQ = 40_000_000;//106_666_666;
+// parameter CLK_FREQ = 106_666_666;
+
 parameter BAUD_RATE = 1000000;
 parameter CLKS_PER_BIT = CLK_FREQ / BAUD_RATE;
 parameter CLKS_HALF_BIT = CLKS_PER_BIT / 2;

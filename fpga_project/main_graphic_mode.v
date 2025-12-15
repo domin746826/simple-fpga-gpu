@@ -57,9 +57,11 @@ wire clk106_int;
 wire clk106m;
 wire dcm_locked;
 
+//*32/3 for 1440x900 @60Hz
+
 DCM_SP #(
-    .CLKFX_MULTIPLY(32),      // mnożnik
-    .CLKFX_DIVIDE(3),         // dzielnik
+    .CLKFX_MULTIPLY(4),      // mnożnik
+    .CLKFX_DIVIDE(1),         // dzielnik
     .CLKIN_PERIOD(100.0),     // okres wejściowego clk10m = 100 ns
     .CLK_FEEDBACK("NONE"),
     .STARTUP_WAIT("FALSE")
@@ -112,15 +114,24 @@ vga_gen vga_timing (
 
 assign led2 = 1;
 
+// 1440x900 @60Hz timing parameters
+// localparam small_count_to = 5;
+// localparam whole_line = 1904;
+// localparam whole_frame = 932;
+
+localparam small_count_to = 3;
+localparam whole_line = 1056;
+localparam whole_frame = 628;
+
 reg [5:0] pixel_out;// = 6'b0;
 reg [7:0] old_vram_byte = 8'b0;
 reg [1:0] small_vram_index = 0;
-reg [2:0] h_small = 5;
+reg [2:0] h_small = small_count_to;
 reg [2:0] v_small = 0;
 
 always @(posedge clk106m) begin
     if (can_color) begin
-        if(h_small == 5) begin
+        if(h_small == small_count_to) begin
             h_small <= 0;
             case (small_vram_index)
                 0: begin
@@ -145,6 +156,7 @@ always @(posedge clk106m) begin
             g1_pin <= pixel_out[3];
             b0_pin <= pixel_out[0];
             b1_pin <= pixel_out[1];
+
         end else begin
             h_small <= h_small + 1;
         end
@@ -157,15 +169,15 @@ always @(posedge clk106m) begin
         b1_pin <= 0;
     end
 
-    if(h_counter == 1900) begin
-        h_small <= 5;
+    if(h_counter == whole_line-4) begin
+        h_small <= small_count_to;
         small_vram_index <= 0;
 
-        if(v_counter == 931) begin
+        if(v_counter == whole_frame-1) begin
             current_vram_read_addr <= 0;
             v_small <= 0;
         end else begin
-            if(v_small == 5) begin
+            if(v_small == small_count_to) begin
                 v_small <= 0;
             end else begin
                 v_small <= v_small + 1;
