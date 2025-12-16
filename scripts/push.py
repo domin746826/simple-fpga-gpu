@@ -158,8 +158,8 @@ def send_pixels_over_serial(infile, port, baudrate=1000000, delay=0.01):
                 distribute(x, y + 1, 5 / 16)
                 distribute(x + 1, y + 1, 1 / 16)
 
-    print("Wyświetlanie podglądu obrazu...")
-    show_preview(output_indices, width, height)
+    #print("Wyświetlanie podglądu obrazu...")
+    #show_preview(output_indices, width, height)
 
     # Używamy DOKŁADNIE tej samej logiki buforowania co w generatorze patternu
     buf = []
