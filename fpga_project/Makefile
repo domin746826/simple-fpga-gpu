@@ -37,6 +37,7 @@ $(ISE_PROJECT_FILE): $(VERILOG_SOURCES)
 	done
 
 build:
+	(cd ise && mkdir -p xst/projnav.tmp)
 	(cd ise && $(isePath)/xst -intstyle ise -ifn "$(myPath)/ise/main.xst" -ofn "$(myPath)/ise/main.syr" )
 	(cd ise && $(isePath)/ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc ../$(constrainsFile) -p xc3s250e-vq100-4 main.ngc main.ngd  )
 	(cd ise && $(isePath)/map -intstyle ise -p xc3s250e-vq100-4 -cm area -ir off -pr off -c 100 -o main_map.ncd main.ngd main.pcf )
