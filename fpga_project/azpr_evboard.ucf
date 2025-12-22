@@ -1,22 +1,22 @@
-NET "led1" LOC = "P54";
-NET "led2" LOC = "P53";
-# NET "btn1" LOC = "P22";
-# NET "btn2" LOC = "P23";
-# NET "btn3" LOC = "P24";
-NET "hsync_pin" LOC = "P60";
-NET "vsync_pin" LOC = "P61";
+NET "led1" LOC = "P54" | IOSTANDARD = LVCMOS33;
+NET "led2" LOC = "P53" | IOSTANDARD = LVCMOS33;
+NET "btn1" LOC = "P22";
+NET "btn2" LOC = "P23";
+NET "btn3" LOC = "P24";
+NET "hsync_pin" LOC = "P60" | IOSTANDARD = LVCMOS33;
+NET "vsync_pin" LOC = "P61" | IOSTANDARD = LVCMOS33;
 
 # NET "r_pin" LOC = "P62";
 # NET "g_pin" LOC = "P63";
 # NET "b_pin" LOC = "P65";
 # NET "i_pin" LOC = "P66";
 NET "uart_rx"      LOC = "P70";
-NET "r1_pin"   LOC = "P62";
-NET "r0_pin"   LOC = "P63";
-NET "g1_pin"   LOC = "P65";
-NET "g0_pin"   LOC = "P66";
-NET "b1_pin"   LOC = "P67";
-NET "b0_pin"   LOC = "P68";
+NET "r1_pin"   LOC = "P62" | IOSTANDARD = LVCMOS33;
+NET "r0_pin"   LOC = "P63" | IOSTANDARD = LVCMOS33;
+NET "g1_pin"   LOC = "P65" | IOSTANDARD = LVCMOS33;
+NET "g0_pin"   LOC = "P66" | IOSTANDARD = LVCMOS33;
+NET "b1_pin"   LOC = "P67" | IOSTANDARD = LVCMOS33;
+NET "b0_pin"   LOC = "P68" | IOSTANDARD = LVCMOS33;
 
 NET "r1_pin" IOB = TRUE;
 NET "r0_pin" IOB = TRUE;

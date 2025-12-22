@@ -1,4 +1,7 @@
-verilog work "../main_graphic_mode.v"
+verilog work "../main_switchable.v"
+verilog work "../modes/mode_mux.v"
+verilog work "../modes/graphic_mode_6bitcolor.v"
+verilog work "../modes/text_mode.v"
 verilog work "../uart_rx.v"
 verilog work "../vga_gen.v"
 verilog work "../vram_24k.v"
