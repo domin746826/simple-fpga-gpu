@@ -2,12 +2,22 @@
 """
 it's vibecoded XDD
 
-Edytor tekstu 180x56 z 16 kolorami - zapisuje dane w formacie binarnym gotowym do wysłania przez UART
+Edytor tekstu z 16 kolorami - zapisuje dane w formacie binarnym gotowym do wysłania przez UART
+Obsługiwane rozdzielczości: 1440x900, 1024x768, 800x600
 """
 
 import curses
 import os
 import sys
+import argparse
+
+# Definicje rozdzielczości (szerokość_px, wysokość_px, szerokość_znaków, wysokość_znaków)
+# Znaki mają rozmiar 8x16 pikseli
+RESOLUTIONS = {
+    "1440x900": (1440, 900, 180, 56),   # 1440/8=180, 900/16=56 (domyślna)
+    "1024x768": (1024, 768, 128, 48),   # 1024/8=128, 768/16=48
+    "800x600": (800, 600, 100, 37),     # 800/8=100, 600/16=37
+}
 
 # Paleta 16 kolorów w formacie 6-bitowym RGB
 PALETTE_6BIT = [
@@ -51,10 +61,15 @@ COLOR_256_MAP = {
 
 
 class TextEditor:
-    def __init__(self, stdscr):
+    def __init__(self, stdscr, resolution="1440x900"):
         self.stdscr = stdscr
-        self.width = 180
-        self.height = 56
+        
+        # Pobierz parametry rozdzielczości
+        if resolution not in RESOLUTIONS:
+            resolution = "1440x900"
+        self.resolution = resolution
+        px_w, px_h, self.width, self.height = RESOLUTIONS[resolution]
+        
         self.text = [[" " for _ in range(self.width)] for _ in range(self.height)]
         self.colors = [
             [0x0F for _ in range(self.width)] for _ in range(self.height)
@@ -161,19 +176,32 @@ class TextEditor:
         status_line = height - 2
         if status_line >= 0:
             mode_str = f"Mode: {self.mode}"
-            color_str = f"FG: {self.current_fg:2d} BG: {self.current_bg:2d}"
+            res_str = f"Res: {self.resolution} ({self.width}x{self.height})"
             pos_str = f"Pos: {self.cursor_x:3d},{self.cursor_y:3d}"
 
             # Pokaż aktualny kolor
             color_demo = "█"
             try:
                 color_attr = self.get_color_attr(self.current_fg, self.current_bg)
+                fg_attr = self.get_color_attr(self.current_fg, self.current_fg)
+                bg_attr = self.get_color_attr(self.current_bg, self.current_bg)
+                
                 self.stdscr.addstr(status_line, 0, mode_str, curses.A_REVERSE)
-                self.stdscr.addstr(status_line, 15, color_str, curses.A_REVERSE)
-                self.stdscr.addstr(status_line, 40, pos_str, curses.A_REVERSE)
-                self.stdscr.addstr(
-                    status_line, 60, color_demo, color_attr | curses.A_REVERSE
-                )
+                self.stdscr.addstr(status_line, 15, res_str, curses.A_REVERSE)
+                
+                # FG z kolorowym kwadratem
+                self.stdscr.addstr(status_line, 45, f"FG:{self.current_fg:2d}", curses.A_REVERSE)
+                self.stdscr.addstr(status_line, 51, "█", fg_attr)
+                
+                # BG z kolorowym kwadratem
+                self.stdscr.addstr(status_line, 53, f"BG:{self.current_bg:2d}", curses.A_REVERSE)
+                self.stdscr.addstr(status_line, 59, "█", bg_attr)
+                
+                self.stdscr.addstr(status_line, 62, pos_str, curses.A_REVERSE)
+                
+                # Demo kombinacji FG+BG
+                self.stdscr.addstr(status_line, 82, "Demo:", curses.A_REVERSE)
+                self.stdscr.addstr(status_line, 87, "Text", color_attr)
             except curses.error:
                 pass
 
@@ -262,19 +290,39 @@ class TextEditor:
     def save_files(self):
         """Zapisz pliki text.bin i colors.bin"""
         try:
-            # Zapisz tekst (10080 bajtów)
-            with open("text.bin", "wb") as f:
+            # Nazwa pliku z rozdzielczością
+            suffix = f"_{self.resolution.replace('x', '_')}"
+            
+            # Zapisz tekst
+            with open(f"text{suffix}.bin", "wb") as f:
                 for y in range(self.height):
                     for x in range(self.width):
                         f.write(bytes([ord(self.text[y][x])]))
 
-            # Zapisz kolory (10080 bajtów)
-            with open("colors.bin", "wb") as f:
+            # Zapisz kolory
+            with open(f"colors{suffix}.bin", "wb") as f:
                 for y in range(self.height):
                     for x in range(self.width):
                         f.write(bytes([self.colors[y][x]]))
 
-            # Zapisz również jako jeden plik do wysłania (20160 bajtów)
+            # Zapisz również jako jeden plik do wysłania
+            with open(f"output{suffix}.bin", "wb") as f:
+                for y in range(self.height):
+                    for x in range(self.width):
+                        f.write(bytes([ord(self.text[y][x])]))
+                for y in range(self.height):
+                    for x in range(self.width):
+                        f.write(bytes([self.colors[y][x]]))
+            
+            # Zapisz też pod standardową nazwą (bez suffixu) dla kompatybilności
+            with open("text.bin", "wb") as f:
+                for y in range(self.height):
+                    for x in range(self.width):
+                        f.write(bytes([ord(self.text[y][x])]))
+            with open("colors.bin", "wb") as f:
+                for y in range(self.height):
+                    for x in range(self.width):
+                        f.write(bytes([self.colors[y][x]]))
             with open("output.bin", "wb") as f:
                 for y in range(self.height):
                     for x in range(self.width):
@@ -285,8 +333,9 @@ class TextEditor:
 
             # Pokazuj komunikat
             height, width = self.stdscr.getmaxyx()
+            total_bytes = self.width * self.height * 2
             if height - 3 >= 0:
-                msg = "Files saved successfully! Press any key."
+                msg = f"Files saved ({total_bytes} bytes for {self.resolution})! Press any key."
                 try:
                     self.stdscr.addstr(height - 3, 0, msg[: width - 1])
                     self.stdscr.refresh()
@@ -352,12 +401,30 @@ class TextEditor:
                     pass
             return False
 
+    def handle_mouse(self, key):
+        """Obsługa kliknięcia myszką"""
+        if key == curses.KEY_MOUSE:
+            try:
+                _, mx, my, _, bstate = curses.getmouse()
+                # Sprawdź czy kliknięcie jest w obszarze tekstu
+                if 0 <= mx < self.width and 0 <= my < self.height:
+                    self.cursor_x = mx
+                    self.cursor_y = my
+                    return True
+            except curses.error:
+                pass
+        return False
+
     def run(self):
         self.load_files()
 
         while True:
             self.draw_interface()
             key = self.stdscr.getch()
+
+            # Obsługa myszy (działa w obu trybach)
+            if self.handle_mouse(key):
+                continue
 
             if self.mode == "EDIT":
                 self.handle_edit_mode(key)
@@ -367,20 +434,29 @@ class TextEditor:
                     break
 
 
-def main(stdscr):
+def main(stdscr, resolution):
     curses.curs_set(1)  # Pokazuj kursor
     stdscr.keypad(True)  # Włącz obsługę klawiszy specjalnych
+    curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)  # Włącz obsługę myszy
+
+    # Pobierz parametry rozdzielczości
+    if resolution not in RESOLUTIONS:
+        resolution = "1440x900"
+    px_w, px_h, text_w, text_h = RESOLUTIONS[resolution]
 
     # Sprawdź rozmiar terminala
     height, width = stdscr.getmaxyx()
-    if height < 60 or width < 185:
-        stdscr.addstr(0, 0, "Terminal too small! Minimum size: 185x60")
-        stdscr.addstr(1, 0, f"Current size: {width}x{height}")
-        stdscr.addstr(2, 0, "Press any key to exit...")
+    min_width = text_w + 5
+    min_height = text_h + 4
+    if height < min_height or width < min_width:
+        stdscr.addstr(0, 0, f"Terminal too small for {resolution}!")
+        stdscr.addstr(1, 0, f"Minimum size: {min_width}x{min_height}")
+        stdscr.addstr(2, 0, f"Current size: {width}x{height}")
+        stdscr.addstr(3, 0, "Press any key to exit...")
         stdscr.getch()
         return
 
-    editor = TextEditor(stdscr)
+    editor = TextEditor(stdscr, resolution)
     editor.run()
 
     # Zapisz przy wyjściu
@@ -388,8 +464,45 @@ def main(stdscr):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Text editor for FPGA text mode with 16 colors",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Available resolutions:
+  1440x900  - 180x56 characters (default)
+  1024x768  - 128x48 characters
+  800x600   - 100x37 characters
+
+Examples:
+  %(prog)s                  # Use default 1440x900
+  %(prog)s -r 1024x768      # Use 1024x768 resolution
+  %(prog)s --resolution 800x600
+"""
+    )
+    parser.add_argument(
+        "-r", "--resolution",
+        choices=list(RESOLUTIONS.keys()),
+        default="1440x900",
+        help="Screen resolution (default: 1440x900)"
+    )
+    parser.add_argument(
+        "-l", "--list",
+        action="store_true",
+        help="List available resolutions and exit"
+    )
+    
+    args = parser.parse_args()
+    
+    if args.list:
+        print("Available resolutions:")
+        for res, (px_w, px_h, text_w, text_h) in RESOLUTIONS.items():
+            total_chars = text_w * text_h
+            total_bytes = total_chars * 2  # text + colors
+            print(f"  {res:10s} - {text_w:3d}x{text_h:2d} chars = {total_chars:5d} chars, {total_bytes:6d} bytes")
+        sys.exit(0)
+    
     try:
-        curses.wrapper(main)
+        curses.wrapper(lambda stdscr: main(stdscr, args.resolution))
     except KeyboardInterrupt:
         print("\nProgram interrupted by user")
     except Exception as e:

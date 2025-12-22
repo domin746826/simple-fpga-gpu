@@ -1,40 +1,9 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company:
-// Engineer:
-//
-// Create Date:    21:46:07 04/27/2024
-// Design Name:
-// Module Name:    main
-// Project Name:
-// Target Devices:
-// Tool versions:
-// Description:
-//
-// Dependencies:
-//
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
 
-/*
-Modes:
+`include "../timings/selected_timing.vh"
 
-0x00 Text mode 1440x900, font Terminus ter-216n 8x16
-180 cols 56 rows
 
-Format: character, color
-color: low nibble - foreground, high nibble - background
 
-0x0000-0x2759 - text (10080 bytes)
-0x2760-0x4EBF - fg/bg colors (10080 bytes)
-0x4EC0-0x5EBF - font (4096 bytes)
-0x5EC0-0x5ECF - color palette (16 colors, 6 bit each, two oldest bits unused)
-0x5ED0-0x5F00 - registers and reserved (48 bytes)
-
-*/
 
 module graphic_mode_6bitcolor (
     output reg r0,
@@ -52,27 +21,33 @@ module graphic_mode_6bitcolor (
     input wire [11:0] v_counter
 );
 
+localparam SMALL_COUNT_TO = `SMALL_COUNT_TO;
+localparam VISIBLE_AREA  = `VISIBLE_AREA;
+localparam FRONT_PORCH   = `FRONT_PORCH;
+localparam SYNC_PULSE    = `SYNC_PULSE;
+localparam BACK_PORCH    = `BACK_PORCH;
+localparam WHOLE_LINE    = `WHOLE_LINE;
 
+localparam VISIBLE_LINES = `VISIBLE_LINES;
+localparam V_FRONT_PORCH = `V_FRONT_PORCH;
+localparam V_SYNC_PULSE  = `V_SYNC_PULSE;
+localparam V_BACK_PORCH  = `V_BACK_PORCH;
+localparam WHOLE_FRAME   = `WHOLE_FRAME;
 
-// 1440x900 @60Hz timing parameters
-localparam small_count_to = 5;
-localparam whole_line = 1904;
-localparam whole_frame = 932;
+localparam HSYNC_NEGATIVE = `HSYNC_NEGATIVE;
+localparam VSYNC_NEGATIVE = `VSYNC_NEGATIVE;
 
-// localparam small_count_to = 3;
-// localparam whole_line = 1056;
-// localparam whole_frame = 628;
 
 reg [5:0] pixel_out;// = 6'b0;
-reg [7:0] old_vram_byte = 8'b0;
+(* keep = "true" *) reg [7:0] old_vram_byte = 8'b0; // bits [7:6] intentionally unused in pixel unpacking
 reg [1:0] small_vram_index = 0;
-reg [2:0] h_small = small_count_to;
+reg [2:0] h_small = SMALL_COUNT_TO;
 reg [2:0] v_small = 0;
 
 always @(posedge clk) begin
     if (!en) begin
         current_vram_read_addr <= 0;
-        h_small <= small_count_to;
+        h_small <= SMALL_COUNT_TO;
         v_small <= 0;
         small_vram_index <= 0;
         r0 <= 0;
@@ -83,7 +58,7 @@ always @(posedge clk) begin
         b1 <= 0;
     end else begin
         if (can_color) begin
-            if(h_small == small_count_to) begin
+            if(h_small == SMALL_COUNT_TO) begin
                 h_small <= 0;
                 case (small_vram_index)
                     0: begin
@@ -121,15 +96,15 @@ always @(posedge clk) begin
             b1 <= 0;
         end
 
-        if(h_counter == whole_line-4) begin
-            h_small <= small_count_to;
+        if(h_counter == WHOLE_LINE-4) begin
+            h_small <= SMALL_COUNT_TO;
             small_vram_index <= 0;
 
-            if(v_counter == whole_frame-1) begin
+            if(v_counter == WHOLE_FRAME-1) begin
                 current_vram_read_addr <= 0;
                 v_small <= 0;
             end else begin
-                if(v_small == small_count_to) begin
+                if(v_small == SMALL_COUNT_TO) begin
                     v_small <= 0;
                 end else begin
                     v_small <= v_small + 1;

@@ -13,7 +13,7 @@ module vram_24k (
 (* ram_style="block" *) reg [7:0] mem [24575:0];
 
 initial begin
-    $readmemh("../scripts/output.hex", mem);
+    $readmemh("../scripts/output_1440x900.hex", mem);
 end
 
 always @(posedge render_clk) begin

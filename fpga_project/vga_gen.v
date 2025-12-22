@@ -1,3 +1,5 @@
+`include "timings/selected_timing.vh"
+
 module vga_gen (
     input wire clk,
     input wire en,
@@ -9,44 +11,25 @@ module vga_gen (
     output reg [11:0] v_counter = 12'b0, // 0-932
 
     input wire [7:0] side_pixels_remove,
-    input wire [7:0] topbottom_pixels_remove
+    input wire [7:0] bottom_pixels_remove
 );
 
+localparam SMALL_COUNT_TO = `SMALL_COUNT_TO;
+localparam VISIBLE_AREA  = `VISIBLE_AREA;
+localparam FRONT_PORCH   = `FRONT_PORCH;
+localparam SYNC_PULSE    = `SYNC_PULSE;
+localparam BACK_PORCH    = `BACK_PORCH;
+localparam WHOLE_LINE    = `WHOLE_LINE;
 
-// 800x600 @60Hz timing parameters
-// localparam SIDE_PIXELS_REMOVE = 0;
-// localparam VISIBLE_AREA = 800; // 1200
-// localparam FRONT_PORCH = 40;
-// localparam SYNC_PULSE = 128;
-// localparam BACK_PORCH = 88;
-// localparam WHOLE_LINE = VISIBLE_AREA + FRONT_PORCH + SYNC_PULSE + BACK_PORCH; // 1056
+localparam VISIBLE_LINES = `VISIBLE_LINES;
+localparam V_FRONT_PORCH = `V_FRONT_PORCH;
+localparam V_SYNC_PULSE  = `V_SYNC_PULSE;
+localparam V_BACK_PORCH  = `V_BACK_PORCH;
+localparam WHOLE_FRAME   = `WHOLE_FRAME;
 
-// localparam VISIBLE_LINES = 600; // 600 + 1 + 4 + 23
-// localparam V_FRONT_PORCH = 1;
-// localparam V_SYNC_PULSE = 4;
-// localparam V_BACK_PORCH = 23;
-// localparam WHOLE_FRAME = VISIBLE_LINES + V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH; // 628
+localparam HSYNC_NEGATIVE = `HSYNC_NEGATIVE;
+localparam VSYNC_NEGATIVE = `VSYNC_NEGATIVE;
 
-// localparam HSYNC_NEGATIVE = 0;
-// localparam VSYNC_NEGATIVE = 0;
-
-
-// 1440x900 @60Hz timing parameters
-localparam SIDE_PIXELS_REMOVE = 120;
-localparam VISIBLE_AREA = 1440; // 1200
-localparam FRONT_PORCH = 80;
-localparam SYNC_PULSE = 152;
-localparam BACK_PORCH = 232;
-localparam WHOLE_LINE = VISIBLE_AREA + FRONT_PORCH + SYNC_PULSE + BACK_PORCH; // 1904
-
-localparam VISIBLE_LINES = 900; // 900 + 3 + 4 + 25
-localparam V_FRONT_PORCH = 1;
-localparam V_SYNC_PULSE = 3;
-localparam V_BACK_PORCH = 28;
-localparam WHOLE_FRAME = VISIBLE_LINES + V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH; // 932
-
-localparam HSYNC_NEGATIVE = 1;
-localparam VSYNC_NEGATIVE = 0;
 
 always @(posedge clk) begin
     if (!en) begin
@@ -70,10 +53,14 @@ end
 
 // Line: disp -> fp -> sync -> bp
 
+// Sync signals 
+assign hsync = HSYNC_NEGATIVE ^ (h_counter >= (VISIBLE_AREA+FRONT_PORCH) && h_counter < (VISIBLE_AREA+FRONT_PORCH+SYNC_PULSE));
+assign vsync = VSYNC_NEGATIVE ^ (v_counter >= (VISIBLE_LINES+V_FRONT_PORCH) && v_counter < (VISIBLE_LINES+V_FRONT_PORCH+V_SYNC_PULSE));
 
-assign hsync = HSYNC_NEGATIVE ^ (h_counter >= (VISIBLE_AREA+FRONT_PORCH-side_pixels_remove) && h_counter < (VISIBLE_AREA+FRONT_PORCH+SYNC_PULSE-side_pixels_remove));
-assign vsync = VSYNC_NEGATIVE ^ (v_counter >= (VISIBLE_LINES+V_FRONT_PORCH-topbottom_pixels_remove) && v_counter < (VISIBLE_LINES+V_FRONT_PORCH+V_SYNC_PULSE-topbottom_pixels_remove));
-assign can_color = h_counter < VISIBLE_AREA-2*side_pixels_remove && v_counter < VISIBLE_LINES - 2*topbottom_pixels_remove;
+// Color area - centered within the fixed frame (black borders around smaller content)
+assign can_color = h_counter >= side_pixels_remove && 
+                   h_counter < (VISIBLE_AREA - side_pixels_remove) && 
+                   v_counter < (VISIBLE_LINES - bottom_pixels_remove);
 
 endmodule
 

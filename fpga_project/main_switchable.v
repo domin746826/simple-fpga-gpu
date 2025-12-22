@@ -50,7 +50,7 @@ module main (
     input wire btn2,
     input wire btn3,
     input uart_rx,
-    output reg led1,
+    output wire led1,
     output wire led2
 
 );
@@ -103,7 +103,8 @@ mode_mux mux (
 
 
 wire rx_data_valid;
-reg dataack_read = 1'b0;
+reg dataack_read = 1'b1;
+(* keep = "true" *) wire rx_error; // UART error signal (directly usable for debugging)
 
 uart_rx uart_rx_inst (
     .clk(clk10m),
@@ -112,10 +113,12 @@ uart_rx uart_rx_inst (
     .data_ack(dataack_read),
     .data(rx_byte),
     .data_ready(rx_data_valid),
-    .error()
+    .error(rx_error)
 );
 
-assign led2 = current_mode;
+// assign led2 = current_mode;
+assign led1 = 1;
+assign led2 = 1;
 reg rx_data_valid_prev = 0;
 
 always @(posedge clk10m) begin
@@ -128,7 +131,7 @@ always @(posedge clk10m) begin
         else
             vram_index <= vram_index + 1;
 
-        led1 <= ~led1;
+        // led1 <= ~led1;
     end else begin
         // dataack_read <= 0;
         rx_we <= 0;

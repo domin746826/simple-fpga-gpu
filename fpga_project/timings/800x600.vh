@@ -1,0 +1,40 @@
+`ifndef VGA_TIMING_800x600_VH
+`define VGA_TIMING_800x600_VH
+
+// 800x600 @60Hz
+`define SMALL_COUNT_TO 3
+
+`define VISIBLE_AREA   800
+`define FRONT_PORCH    40
+`define SYNC_PULSE     128
+`define BACK_PORCH     88
+`define WHOLE_LINE (`VISIBLE_AREA+`FRONT_PORCH+`SYNC_PULSE+`BACK_PORCH)
+
+`define VISIBLE_LINES  600
+`define V_FRONT_PORCH  1
+`define V_SYNC_PULSE   4
+`define V_BACK_PORCH   23
+`define WHOLE_FRAME (`VISIBLE_LINES+`V_FRONT_PORCH+`V_SYNC_PULSE+`V_BACK_PORCH)
+
+`define HSYNC_NEGATIVE 0
+`define VSYNC_NEGATIVE 0
+
+
+`define CLK_DCM_MULTIPLY 4
+`define CLK_DCM_DIVIDE   1
+
+
+// text mode
+`define TEXT_COLS 100
+`define TEXT_ROWS 37
+
+// graphics mode
+`define SIDE_PIXELS_BLACK_GRAPHIC 0
+`define BOTTOM_LINES_BLACK_GRAPHIC 0
+
+// text mode
+`define SIDE_PIXELS_BLACK_TEXT 0
+`define BOTTOM_LINES_BLACK_TEXT 8
+
+
+`endif
