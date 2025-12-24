@@ -10,7 +10,8 @@ NET "vsync_pin" LOC = "P61" | IOSTANDARD = LVCMOS33;
 # NET "g_pin" LOC = "P63";
 # NET "b_pin" LOC = "P65";
 # NET "i_pin" LOC = "P66";
-NET "uart_rx"      LOC = "P70";
+# NET "uart_rx"      LOC = "P70";
+
 NET "r1_pin"   LOC = "P62" | IOSTANDARD = LVCMOS33;
 NET "r0_pin"   LOC = "P63" | IOSTANDARD = LVCMOS33;
 NET "g1_pin"   LOC = "P65" | IOSTANDARD = LVCMOS33;
@@ -29,6 +30,19 @@ NET "clk10m" TNM_NET = "CLK";
 TIMESPEC "TS_CLK" = PERIOD "CLK" 100 ns HIGH 50%;
 
 NET "clk10m" LOC = "P83";
+NET "clk10m" CLOCK_DEDICATED_ROUTE = FALSE;
+
+# Ważne: CLOCK_DEDICATED_ROUTE = FALSE pozwala użyć P35 jako zegara logicznego
+NET "spi_clk"  LOC = "P35" | IOSTANDARD = LVCMOS33 | CLOCK_DEDICATED_ROUTE = FALSE;
+NET "spi_mosi" LOC = "P33" | IOSTANDARD = LVCMOS33;
+NET "spi_cs_n" LOC = "P36" | IOSTANDARD = LVCMOS33;
+
+# MISO: SLEW=FAST i IOB=TRUE (lub FORCE) są kluczowe dla 50MHz TX!
+NET "spi_miso" LOC = "P40" | IOSTANDARD = LVCMOS33 | SLEW = FAST | IOB = TRUE;
+
+# Informacja dla timingu, że SPI biega na 50MHz (20ns)
+NET "spi_clk" TNM_NET = "spi_clk_grp";
+TIMESPEC "TS_spi_clk" = PERIOD "spi_clk_grp" 20 ns HIGH 50%;
 
 # NET "uart_tx"      LOC = "P71";
 # NET "reset" LOC = "P22";

@@ -16,7 +16,7 @@ module mode_mux (
     output reg g1,
     output reg b0,
     output reg b1,
-
+    output wire [11:0] vcounter,
 
     output wire [7:0] user_data_out,
     input wire [7:0] user_data_in,
@@ -64,6 +64,7 @@ BUFG bufg_clk106 (.I(clk106_int), .O(clk106m));
 wire [11:0] h_counter; // 0-1055
 wire [11:0] v_counter; // 0-627
 
+assign vcounter = v_counter;
 
 
 wire [7:0] vram_render_read;
@@ -138,7 +139,7 @@ localparam V_SYNC_MIDDLE = VISIBLE_LINES + V_FRONT_PORCH + (V_SYNC_PULSE / 2);
 
 always @(posedge clk106m) begin
     // Update mode in middle of vsync pulse when monitor is blanking
-    if(h_counter == 0 && v_counter == V_SYNC_MIDDLE || mode_dbuf == 0) begin
+    if((h_counter == 0 && v_counter == V_SYNC_MIDDLE )|| mode_dbuf != 1 || mode_dbuf != 2) begin
         mode_dbuf <= mode;
     end
 end

@@ -20,7 +20,7 @@ VERILOG_SOURCES = \
 	modes/mode_mux.v \
 	modes/graphic_mode_6bitcolor.v \
 	modes/text_mode.v \
-	uart_rx.v \
+	SPI_Slave.v \
 	vga_gen.v \
 	vram_24k.v
 
