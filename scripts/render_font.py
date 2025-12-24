@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-FONT_FILE = "terminus.raw"   # plik czcionki raw
+FONT_FILE = "default8x16.raw"   # plik czcionki raw
 CHAR_WIDTH = 8
 CHAR_HEIGHT = 16
 COLS = 16   # 16 znaków w wierszu

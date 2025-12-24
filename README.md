@@ -5,6 +5,7 @@ The goal of this project is to implement a minimal, standalone external **GPU** 
 
 ![Demo_txt](./img/demo_txt.jpg)
 ![Demo](./img/demo.jpg)
+![Demo_ascii](./img/ascii_color_demo.png)
 
 ---
 
@@ -25,8 +26,10 @@ Currently implemented:
 - **200×150 graphics mode** on 1440x900 timing
 - **180x56 text mode** on 1440x900 timing
 - **6-bit color (RRGGBB)**
+- **More timings available**
 - Simple VGA output controller
-- Receiving framebuffer over UART
+- Simple SPI Controller (set address, send data, get v_counter, send font, change mode)
+- Demo project on Raspberry Pi Pico
 
 ---
 
@@ -55,17 +58,17 @@ You can adjust pinout in fpga_project/azpr_evboard.ucf
 
 | Category | Description |
 |-----------|-------------|
-| **Graphics Modes** | 200×150 @ 6-bit color (current), additional text modes planned |
-| **Text Modes** | (8×16 font, 4-bit color), (16×32 font, 6-bit color), (12×24 font, 6-bit color), all over 1440x900 resolution |
+| **Graphics Modes** | 256x192@4 Bit color, 2bit Gray/Four color mode 360x225 and more |
+| **Text Modes** | (8×16 font, 4-bit color), (16×32 font, 6-bit color) |
 | **Image Mode** | Storing image in VRAM in JPEG-like format and live-decoding it every frame (720x450x6bit) |
-| **Interfaces** | SPI, UART, and simple parallel data bus |
 | **Acceleration** | Hardware line, rectangle, polygon fill |
+| **Miscellaneous** | Changing clock and graphic modes on the fly, registers with settings
 
 ---
 
 ## Roadmap
 
-### ✅ Stage 1 — Basic Graphics Mode *(Completed)*
+### Stage 1 — Basic Graphics Mode *(Completed)*
 - [x] 200×150 graphics mode, 6-bit color
 - [x] Framebuffer in BRAM
 - [x] Image converter
@@ -75,9 +78,7 @@ You can adjust pinout in fpga_project/azpr_evboard.ucf
 ---
 
 ### Stage 2 — Interfaces & Memory
-- [ ] SPI interface (communication with MCU or host)
-- [ ] UART interface with basic command protocol
-- [ ] Optional 8-bit parallel data interface
+- [x] SPI interface (communication with MCU or host)
 - [x] VRAM organization (framebuffer + font/tilemap memory)
 
 ---
@@ -86,7 +87,6 @@ You can adjust pinout in fpga_project/azpr_evboard.ucf
 - [x] Font converter
 - [x] 1440×900, 8×16 font, 4-bit color, fg&bg
 - [ ] 1440×900, 16×32 font, 6-bit color, fg&bg
-- [ ] 1440×900, 12×24 font, 6-bit color, fg&bg
 
 ---
 
